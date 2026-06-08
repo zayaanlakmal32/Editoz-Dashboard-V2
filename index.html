@@ -598,8 +598,14 @@ function renderPOGrid(){
 // NOTION HELPERS
 // ═══════════════════════════════════════════════════
 async function nQuery(dbId,cur){
-  const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dbId,cursor:cur||undefined})});
-  if(!r.ok){const e=await r.json();throw new Error(e.error||r.status);}return r.json();
+  const b={page_size:100};if(cur)b.start_cursor=cur;
+  const r=await fetch('/api/notion',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({dbId,cursor:cur||undefined})
+  });
+  if(!r.ok){const e=await r.json();throw new Error(e.error||r.status);}
+  return r.json();
 }
 async function allPages(dbId){
   let pages=[],cur=null;
@@ -624,15 +630,15 @@ async function fetchNotionClient(client,isDFY){
   const breakdown={};const stagnant=[];let delivered=0,pipeline=0,overdue=0;const now=new Date();
   for(const p of pages){
     const props=p.properties||{};
-    // Raw Notion API: Status is {status:{name:...}} or {select:{name:...}}
+    // Proxy returns flat strings: "Status": "PUBLISHED"
+    // Also handle raw Notion nested format as fallback
     const sObj=props['Status'];
-    const status=sObj?.status?.name||sObj?.select?.name||null;
-    // Publish Date is {date:{start:...}}
-    const pubObj=props['Publish Date']||props['Publishing date']||props['Publish date'];
-    const pubDate=pubObj?.date?.start||null;
-    const lastEdited=p.last_edited_time;
+    const status=typeof sObj==='string'?sObj:(sObj?.status?.name||sObj?.select?.name||null);
+    // Date is flat: "date:Publish Date:start": "2026-06-10"
+    const pubDate=props['date:Publish Date:start']||props['date:Publishing date:start']||props['date:Publish date:start']||props['Publish Date']?.date?.start||props['Publishing date']?.date?.start||null;
+    const lastEdited=p.last_edited_time||p.created_time||null;
     const nameObj=props['Name'];
-    const title=nameObj?.title?.[0]?.plain_text||'Untitled';
+    const title=typeof nameObj==='string'?nameObj:(nameObj?.title?.[0]?.plain_text||'Untitled');
     if(status)breakdown[status]=(breakdown[status]||0)+1;
     // DELIVERED = any delivered status (Published, PUBLISHED, Need Posting, Need posting)
     if(DS.includes(status))delivered++;
