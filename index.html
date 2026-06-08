@@ -621,10 +621,13 @@ async function fetchNotionClient(client,isDFY){
   const breakdown={};const stagnant=[];let delivered=0,pipeline=0,overdue=0;const now=new Date();
   for(const p of pages){
     const props=p.properties||{};
-    const sObj=props['Status'],status=sObj?.status?.name||sObj?.select?.name||null;
-    const pubObj=props[pubProp],pubDate=pubObj?.date?.start||null;
+    // Handle both raw Notion API format and simplified proxy format
+    const sObj=props['Status'];
+    const status=typeof sObj==='string'?sObj:(sObj?.status?.name||sObj?.select?.name||null);
+    const pubObj=props['Publish Date']||props['Publishing date']||props['Publish date'];
+    const pubDate=(typeof pubObj==='string'?pubObj:pubObj?.date?.start)||null;
     const lastEdited=p.last_edited_time;
-    const title=props['Name']?.title?.[0]?.plain_text||'Untitled';
+    const title=props['Name']?.title?.[0]?.plain_text||props['Name']||'Untitled';
     if(status)breakdown[status]=(breakdown[status]||0)+1;
     // Delivered = delivered status AND (publish date within cycle OR no publish date set)
     if(DS.includes(status)&&(!pubDate||( pubDate>=cs&&pubDate<=ce)))delivered++;
