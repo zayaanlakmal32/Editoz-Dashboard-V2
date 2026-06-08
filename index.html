@@ -395,7 +395,7 @@ const NOTION_CLIENTS = {
     {name:'STYT (Ali)',     po:'Vishma', dbId:'14fb6494fc148098a699ffc27985a41a',pubProp:'Publishing date'},
     {name:'Lori Greiner',   po:'Sayuni', dbId:'121b6494fc14801ca303e06145aa2f69',pubProp:'Publishing date'},
     {name:'Chali',          po:'Joshua', dbId:'7a76828bc00d4f5f81515c6636472b27',pubProp:'Publishing date'},
-    {name:'Davie Fogarty',  po:'Kasun',  dbId:null, manual:true},
+    {name:'Davie Fogarty',  po:'Kasun',  dbId:null,manual:true},
   ]
 };
 
@@ -407,7 +407,7 @@ const SK_DFY=['Ideas','Ready to film','To be published','Published','Do not prog
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-let allClients=[], activeFilter='all', targetsMap={}, opTargetsMap={}, NOTION_DATA={};
+let allClients=[], activeFilter='all', targetsMap={}, NOTION_DATA={};
 let OPS_TAB='accelerate', opsColorFilter=null;
 
 // ═══════════════════════════════════════════════════
@@ -434,15 +434,6 @@ function parseTargetsTab(rows){
   const map={};
   for(let i=1;i<rows.length;i++){const r=rows[i];if(!r||r.length<4)continue;const name=(r[0]||'').trim();if(!name)continue;
     map[name.toLowerCase()]={metric:(r[3]||'').trim(),goalVal:(r[4]||'').trim(),currentProgress:(r[5]||'').trim(),goalNum:parseNum(r[4]),currentNum:parseNum(r[5])};}
-  return map;
-}
-function parseOpTargets(rows){
-  // Cols: Project(0), Client(1), PO(2), Content output(3)
-  const map={};
-  for(let i=1;i<rows.length;i++){const r=rows[i];if(!r||r.length<4)continue;
-    const name=(r[1]||'').trim();if(!name)continue;
-    const num=parseFloat((r[3]||'').trim());
-    map[name.toLowerCase()]=isNaN(num)?0:num;}
   return map;
 }
 function detectColumns(h){
@@ -615,42 +606,69 @@ async function allPages(dbId){
   do{const res=await nQuery(dbId,cur);pages.push(...(res.results||[]));cur=res.has_more?res.next_cursor:null;}while(cur);
   return pages;
 }
-function cycleStart(client,isDFY){
-  if(isDFY){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1).toISOString().split('T')[0];}
+function getCycleWindow(client,isDFY){
+  if(isDFY){
+    const n=new Date();
+    const start=new Date(n.getFullYear(),n.getMonth(),1);
+    const end=new Date(n.getFullYear(),n.getMonth()+1,0);
+    return{start:start.toISOString().split('T')[0],end:end.toISOString().split('T')[0]};
+  }
   const s=new Date(client.stratDate),now=new Date();let cs=new Date(s);
-  while(true){const ce=new Date(cs);ce.setDate(ce.getDate()+30);if(now<=ce)return cs.toISOString().split('T')[0];cs=ce;}
+  while(true){
+    const ce=new Date(cs);ce.setDate(ce.getDate()+30);
+    if(now<=ce)return{start:cs.toISOString().split('T')[0],end:ce.toISOString().split('T')[0]};
+    cs=ce;
+  }
 }
 function daysAgo(iso){if(!iso)return 999;return Math.floor((Date.now()-new Date(iso))/86400000);}
 async function fetchNotionClient(client,isDFY){
-  if(client.manual||!client.dbId)return{delivered:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,manual:true};
-  const DS=isDFY?D_DFY:D_ACC,SK=isDFY?SK_DFY:SK_ACC,cs=cycleStart(client,isDFY),pubProp=client.pubProp||'Publish Date';
+  if(client.manual||!client.dbId)return{delivered:0,target:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,manual:true};
+  const DS=isDFY?D_DFY:D_ACC,SK=isDFY?SK_DFY:SK_ACC;
+  const{start:cs,end:ce}=getCycleWindow(client,isDFY);
+  const pubProp=client.pubProp||'Publish Date';
   const pages=await allPages(client.dbId);
-  const breakdown={};const stagnant=[];let delivered=0,pipeline=0,overdue=0;const now=new Date();
+  const breakdown={};const stagnant=[];
+  let delivered=0,target=0,pipeline=0,overdue=0;
+  const now=new Date();
+
   for(const p of pages){
-    const props=p.properties||{},sObj=props['Status'],status=sObj?.status?.name||sObj?.select?.name||null;
-    const pubObj=props[pubProp],pubDate=pubObj?.date?.start||null,lastEdited=p.last_edited_time;
+    const props=p.properties||{};
+    const sObj=props['Status'],status=sObj?.status?.name||sObj?.select?.name||null;
+    const pubObj=props[pubProp],pubDate=pubObj?.date?.start||null;
+    const lastEdited=p.last_edited_time;
     const title=props['Name']?.title?.[0]?.plain_text||'Untitled';
+
     if(status)breakdown[status]=(breakdown[status]||0)+1;
-    if(DS.includes(status)){if(!pubDate||pubDate>=cs)delivered++;}
-    if(!DS.includes(status)&&status&&!['On Hold','Do Not Progress','Do not progress','Topics','Ideas'].includes(status))pipeline++;
-    if(pubDate&&new Date(pubDate)<now&&!DS.includes(status)&&status)overdue++;
-    if(status&&!SK.includes(status)&&daysAgo(lastEdited)>=5)stagnant.push({name:title,status,days:daysAgo(lastEdited)});
+
+    // Only count cards that have a publish date within the current cycle
+    const inCycle=pubDate&&pubDate>=cs&&pubDate<=ce;
+
+    // TARGET = all cards with a publish date in this cycle (regardless of status)
+    if(inCycle) target++;
+
+    // DELIVERED = cards with publish date in cycle AND in a delivered status
+    if(inCycle&&DS.includes(status)) delivered++;
+
+    // PIPELINE = active work cards (no publish date filter — these are in progress)
+    if(!DS.includes(status)&&status&&!['On Hold','Do Not Progress','Do not progress','Topics','Ideas'].includes(status)) pipeline++;
+
+    // OVERDUE = has past publish date, not delivered
+    if(pubDate&&new Date(pubDate)<now&&!DS.includes(status)&&status) overdue++;
+
+    // STAGNANT = not in skip statuses, not edited in 5+ days
+    if(status&&!SK.includes(status)&&daysAgo(lastEdited)>=5)
+      stagnant.push({name:title,status,days:daysAgo(lastEdited)});
   }
   stagnant.sort((a,b)=>b.days-a.days);
-  return{delivered,stagnant,breakdown,pipeline,overdue};
+  return{delivered,target,stagnant,breakdown,pipeline,overdue};
 }
 
 // ═══════════════════════════════════════════════════
 // OPERATIONAL GOALS
 // ═══════════════════════════════════════════════════
-function getOpTarget(c){
-  const k=c.name.toLowerCase();
-  if(opTargetsMap[k]!==undefined)return opTargetsMap[k];
-  for(const[mk,mv]of Object.entries(opTargetsMap)){if(k.includes(mk.split(' ')[0])||mk.includes(k.split(' ')[0]))return mv;}
-  return 0;
-}
+function getOpTarget(c,d){return(d&&d.target!=null)?d.target:0;}
 function getOpsColor(c,d){
-  if(!d||d.manual)return'gray';const t=getOpTarget(c);if(t<=0)return'gray';
+  if(!d||d.manual)return'gray';const t=getOpTarget(c,d);if(t<=0)return'gray';
   const pct=(d.delivered/t)*100;if(pct>=90)return'green';if(pct>=50)return'yellow';return'red';
 }
 function getOpsHex(col){return{green:'#00b37e',yellow:'#f59e0b',red:'#ef4444',gray:'#6e6860'}[col]||'#6e6860';}
@@ -678,14 +696,14 @@ function applyOpsFilters(){
 }
 function renderOpsKPIs(){
   const clients=NOTION_CLIENTS[OPS_TAB];
-  const wd=clients.filter(c=>NOTION_DATA[c.name]&&!NOTION_DATA[c.name].manual&&getOpTarget(c)>0);
+  const wd=clients.filter(c=>NOTION_DATA[c.name]&&!NOTION_DATA[c.name].manual&&getOpTarget(c,NOTION_DATA[c.name])>0);
   const onTarget=wd.filter(c=>getOpsColor(c,NOTION_DATA[c.name])==='green').length;
   const behind=wd.filter(c=>getOpsColor(c,NOTION_DATA[c.name])==='red').length;
   const del=wd.reduce((s,c)=>s+(NOTION_DATA[c.name]?.delivered||0),0);
-  const tgt=wd.reduce((s,c)=>s+getOpTarget(c),0);
+  const tgt=wd.reduce((s,c)=>s+getOpTarget(c,NOTION_DATA[c.name]),0);
   const avg=tgt>0?Math.round((del/tgt)*100):0;
   document.getElementById('opsKPIs').innerHTML=
-    `<div class="dark-kpi" style="--dk-color:#7c5ef9"><div class="dark-kpi-label">Total Clients</div><div class="dark-kpi-val">${clients.length}</div><div class="dark-kpi-sub">${clients.filter(c=>getOpTarget(c)>0).length} with targets</div></div>`+
+    `<div class="dark-kpi" style="--dk-color:#7c5ef9"><div class="dark-kpi-label">Total Clients</div><div class="dark-kpi-val">${clients.length}</div><div class="dark-kpi-sub">${clients.filter(c=>getOpTarget(c,NOTION_DATA[c.name])>0).length} with targets</div></div>`+
     `<div class="dark-kpi" style="--dk-color:#00b37e"><div class="dark-kpi-label">On Target</div><div class="dark-kpi-val">${onTarget}</div><div class="dark-kpi-sub">≥90% of goal</div></div>`+
     `<div class="dark-kpi" style="--dk-color:#ef4444"><div class="dark-kpi-label">Behind</div><div class="dark-kpi-val">${behind}</div><div class="dark-kpi-sub"><50% of goal</div></div>`+
     `<div class="dark-kpi" style="--dk-color:#f59e0b"><div class="dark-kpi-label">Overall Output</div><div class="dark-kpi-val">${avg}%</div><div class="dark-kpi-sub">${del} of ${tgt} posts</div></div>`;
@@ -698,7 +716,7 @@ function renderOpsCards(clients){
   if(!clients.length){grid.innerHTML='<div style="color:#6e6860;font-size:12px;font-weight:600;padding:20px 0">No clients match.</div>';return;}
   grid.innerHTML=clients.map(c=>{
     const d=NOTION_DATA[c.name],col=getOpsColor(c,d),hex=getOpsHex(col);
-    const delivered=d?.delivered||0,target=getOpTarget(c),pct=target>0?Math.min(Math.round((delivered/target)*100),999):null;
+    const delivered=d?.delivered||0,target=getOpTarget(c,d),pct=target>0?Math.min(Math.round((delivered/target)*100),999):null;
     const poColor=PO_COLORS[c.po]||'#6e6860';
     if(!d)return`<div class="op-card"><div class="op-card-header"><div><div class="op-card-name">${c.name}</div><div class="op-card-po">PO: ${c.po||'—'}</div></div></div><div class="shim" style="width:60%;margin-bottom:8px"></div><div class="shim" style="width:100%;height:6px"></div></div>`;
     if(c.manual||!c.dbId)return`<div class="op-card"><div class="op-card-header"><div><div class="op-card-name">${c.name}</div><div class="op-card-po">PO: ${c.po||'—'}</div></div><span style="font-size:10px;font-weight:700;color:#6e6860;background:rgba(110,104,96,0.15);padding:3px 8px;border-radius:20px">Manual</span></div><div style="font-size:11px;color:#6e6860;margin-top:8px">Tracked manually</div></div>`;
@@ -726,7 +744,7 @@ function renderPodCombined(){
     const nc=allNotion.filter(c=>{const p=allClients.find(x=>x.name.toLowerCase()===c.name.toLowerCase());return p&&p.pod===pod;});
     const gp=computeGoalProgress(pc);
     const opDel=nc.reduce((s,c)=>s+(NOTION_DATA[c.name]?.delivered||0),0);
-    const opTgt=nc.reduce((s,c)=>s+getOpTarget(c),0);
+    const opTgt=nc.reduce((s,c)=>s+getOpTarget(c,NOTION_DATA[c.name]),0);
     const opPct=opTgt>0?Math.round((opDel/opTgt)*100):0;
     const red=pc.filter(c=>getStatus(c.status)==='red').length,yellow=pc.filter(c=>getStatus(c.status)==='yellow').length,green=pc.filter(c=>getStatus(c.status)==='green').length;
     return{pod,pc,nc,gp,opDel,opTgt,opPct,red,yellow,green};
@@ -779,7 +797,7 @@ function renderPodCombined(){
             <div class="pod-mini-box"><div class="pod-mini-val">${p.opTgt}</div><div class="pod-mini-label">Target</div></div>
             <div class="pod-mini-box"><div class="pod-mini-val" style="color:${progressColor(p.opPct)}">${p.opPct}%</div><div class="pod-mini-label">Rate</div></div>
           </div>
-          <div class="pod-client-chips">${p.nc.map(c=>{const d=NOTION_DATA[c.name],col=getOpsColor(c,d),hex=getOpsHex(col),del=d?.delivered||0,tgt=getOpTarget(c);return'<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid '+hex+'44;background:'+hex+'11;color:'+hex+'" title="'+del+' / '+tgt+'">'+c.name+'</span>';}).join('')}</div>
+          <div class="pod-client-chips">${p.nc.map(c=>{const d=NOTION_DATA[c.name],col=getOpsColor(c,d),hex=getOpsHex(col),del=d?.delivered||0,tgt=getOpTarget(c,d);return'<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid '+hex+'44;background:'+hex+'11;color:'+hex+'" title="'+del+' / '+tgt+'">'+c.name+'</span>';}).join('')}</div>
         </div>
       </div>
     </div>`;
@@ -811,7 +829,6 @@ async function loadSheets(){
   try{
     try{const r=await fetchSheetTab('Targets - DFY Clients');targetsMap=parseTargetsTab(r);}catch(e){console.warn(e.message);}
     try{const r=await fetchSheetTab('Targets - Accelerate');Object.assign(targetsMap,parseTargetsTab(r));}catch(e){console.warn(e.message);}
-    try{const r=await fetchSheetTab('Project operational goal');opTargetsMap=parseOpTargets(r);}catch(e){console.warn('Op targets:',e.message);}
     let rows;
     try{rows=await fetchSheetTab('PO Weekly Dashboard');}catch(e){
       try{rows=await fetchSheetTab('PO Weekly  Dashboard');}catch(_){}
@@ -839,7 +856,7 @@ async function loadNotion(){
 
 async function refreshAll(){
   document.getElementById('lastUpdated').textContent='Loading…';
-  allClients=[];NOTION_DATA={};targetsMap={};opTargetsMap={};
+  allClients=[];NOTION_DATA={};targetsMap={};
   await Promise.all([loadSheets(),loadNotion()]);
   document.getElementById('lastUpdated').textContent='Updated '+new Date().toLocaleTimeString()+' · '+new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 }
