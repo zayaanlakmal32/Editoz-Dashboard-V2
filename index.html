@@ -626,8 +626,8 @@ async function fetchNotionClient(client,isDFY){
     const lastEdited=p.last_edited_time;
     const title=props['Name']?.title?.[0]?.plain_text||'Untitled';
     if(status)breakdown[status]=(breakdown[status]||0)+1;
-    // Delivered = delivered status AND publish date within current cycle
-    if(DS.includes(status)&&pubDate&&pubDate>=cs&&pubDate<=ce)delivered++;
+    // Delivered = delivered status AND (publish date within cycle OR no publish date set)
+    if(DS.includes(status)&&(!pubDate||( pubDate>=cs&&pubDate<=ce)))delivered++;
     if(!DS.includes(status)&&status&&!['On Hold','Do Not Progress','Do not progress','Topics','Ideas'].includes(status))pipeline++;
     if(pubDate&&new Date(pubDate)<now&&!DS.includes(status)&&status)overdue++;
     if(status&&!SK.includes(status)&&daysAgo(lastEdited)>=5)stagnant.push({name:title,status,days:daysAgo(lastEdited)});
