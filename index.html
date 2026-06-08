@@ -364,8 +364,8 @@ const NOTION_CLIENTS = {
   accelerate:[
     {name:'Haran',        po:'Eshan',   dbId:'342b6494fc1481008929d0f5d2e85522',stratDate:'2026-04-15',opTarget:16},
     {name:'Kaushi',       po:'Eshan',   dbId:'30ab6494fc148176a4aefe807a15316a',stratDate:'2026-01-30',opTarget:20},
-    {name:'Moshi Rahman', po:'Eshan',   dbId:'31ab6494fc14806da731e1a0563975fc',stratDate:'2026-03-09',opTarget:16},
-    {name:'Rasanga',      po:'Eshan',   dbId:'356b6494fc148009979becf0b85dff64',stratDate:'2026-05-09',opTarget:20},
+    {name:'Moshi Rahman', po:'Eshan',   dbId:'31ab6494fc1481c6beafec2fa2352430',stratDate:'2026-03-09',opTarget:16},
+    {name:'Rasanga',      po:'Eshan',   dbId:'356b6494fc14818b9669e2f7ef1cb1fd',stratDate:'2026-05-09',opTarget:20},
     {name:'Global United',po:'Nithila', dbId:'358b6494fc148142b64ddf68febf66a5',stratDate:'2026-05-14',opTarget:20},
     {name:'Akkshata',     po:'Vishaka', dbId:'330b6494fc1481fe9067e7609fc7d146',stratDate:'2026-03-27',opTarget:20},
     {name:'Jordan March', po:'Vishaka', dbId:'306b6494fc148003b84cdecfd6f83f44',stratDate:'2026-01-27',opTarget:10},
@@ -631,8 +631,8 @@ async function fetchNotionClient(client,isDFY){
     const nameObj=props['Name'];
     const title=nameObj?.title?.[0]?.plain_text||'Untitled';
     if(status)breakdown[status]=(breakdown[status]||0)+1;
-    // DELIVERED = PUBLISHED with a publish date within the current cycle
-    if(status==='PUBLISHED'&&pubDate&&pubDate>=cs&&pubDate<=ce)delivered++;
+    // DELIVERED = any delivered status with a publish date within the current cycle
+    if(DS.includes(status)&&pubDate&&pubDate>=cs&&pubDate<=ce)delivered++;
     // PIPELINE = Need posting cards (ready, waiting to be posted)
     if(status==='Need posting'||status==='Need Posting')pipeline++;
     if(pubDate&&new Date(pubDate)<now&&status!=='PUBLISHED'&&status!=='Published'&&status)overdue++;
