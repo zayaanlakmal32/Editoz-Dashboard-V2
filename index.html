@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editoz Club — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   SHARED / LIGHT THEME VARIABLES
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --surface2: #f0f2f8;
+  --border: #e2e6f0;
+  --border2: #d0d5e8;
+  --text: #1a1d2e;
+  --text2: #4a5068;
+  --text3: #8890aa;
+  --green: #0fa958;
+  --green-dim: #eaf7ef;
+  --green-border: #b3e8cc;
+  --red: #e03054;
+  --red-dim: #fdeef2;
+  --red-border: #f5bcc8;
+  --yellow: #d97706;
+  --yellow-dim: #fef3e2;
+  --yellow-border: #fcd6a0;
+  --blue: #2563eb;
+  --blue-dim: #eff4ff;
+  --blue-border: #bdd3fc;
+  --purple: #7c3aed;
+  --purple-dim: #f3efff;
+  --accent: #2563eb;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:13px; min-height:100vh; overflow-x:hidden; }
+
+/* ── HEADER ── */
+.header { display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:60px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:100; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.logo { font-family:'Inter',sans-serif; font-size:16px; font-weight:800; letter-spacing:-0.5px; color:var(--text); }
+.logo span { color:var(--accent); }
+.header-right { display:flex; align-items:center; gap:16px; }
+.last-updated { color:var(--text3); font-size:11px; display:flex; align-items:center; gap:6px; }
+.live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.refresh-btn { background:var(--surface2); border:1px solid var(--border2); color:var(--text2); padding:7px 14px; border-radius:7px; cursor:pointer; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; transition:all 0.15s; display:flex; align-items:center; gap:5px; }
+.refresh-btn:hover { background:var(--blue-dim); border-color:var(--blue-border); color:var(--blue); }
+
+/* ── NAV TABS ── */
+.nav { display:flex; gap:0; padding:0 32px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:60px; z-index:90; }
+.nav-tab { padding:14px 22px; color:var(--text3); cursor:pointer; font-size:12px; font-weight:600; border-bottom:2px solid transparent; transition:all 0.15s; position:relative; bottom:-1px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; }
+.nav-tab:hover { color:var(--text2); }
+.nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-badge { display:inline-flex; align-items:center; justify-content:center; background:var(--red); color:#fff; border-radius:10px; font-size:9px; font-weight:700; padding:1px 6px; margin-left:5px; }
+
+/* ── MAIN CONTAINER ── */
+.main { padding:24px 32px; max-width:1600px; }
+.section { display:none; }
+.section.active { display:block; }
+.section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── KPI CARDS ── */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.kpi-grid-3 { grid-template-columns:repeat(3,1fr); }
+.kpi-grid-5 { grid-template-columns:repeat(5,1fr); }
+.kpi-grid-6 { grid-template-columns:repeat(6,1fr); }
+.kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; position:relative; overflow:hidden; transition:box-shadow 0.15s; }
+.kpi-card:hover { box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent-color,var(--border)); }
+.kpi-card.green { --accent-color:var(--green); }
+.kpi-card.red { --accent-color:var(--red); }
+.kpi-card.yellow { --accent-color:var(--yellow); }
+.kpi-card.blue { --accent-color:var(--blue); }
+.kpi-card.purple { --accent-color:var(--purple); }
+.kpi-label { color:var(--text3); font-size:10px; text-transform:uppercase; letter-spacing:0.8px; font-weight:600; margin-bottom:8px; }
+.kpi-value { font-size:26px; font-weight:800; color:var(--text); line-height:1; margin-bottom:6px; }
+.kpi-value.large { font-size:30px; }
+.kpi-sub { color:var(--text3); font-size:11px; }
+.badge { padding:2px 8px; border-radius:5px; font-size:10px; font-weight:600; }
+.badge.green { background:var(--green-dim); color:var(--green); border:1px solid var(--green-border); }
+.badge.red { background:var(--red-dim); color:var(--red); border:1px solid var(--red-border); }
+.badge.yellow { background:var(--yellow-dim); color:var(--yellow); border:1px solid var(--yellow-border); }
+.badge.blue { background:var(--blue-dim); color:var(--blue); border:1px solid var(--blue-border); }
+
+/* Goal progress special card */
+.goal-pct-card { background:linear-gradient(135deg, var(--blue-dim) 0%, #fff 100%); border:1px solid var(--blue-border); border-radius:10px; padding:16px 18px; position:relative; overflow:hidden; }
+.goal-pct-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--blue); }
+.goal-pct-big { font-size:34px; font-weight:800; color:var(--blue); line-height:1; margin-bottom:4px; }
+.goal-pct-label { color:var(--text3); font-size:10px; text-transform:uppercase; letter-spacing:0.8px; font-weight:600; margin-bottom:8px; }
+.goal-pct-bar { margin-top:10px; }
+
+/* ── PROGRESS ── */
+.progress-track { width:100%; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 0.8s ease; }
+
+/* ── CLIENT GRID (light tabs) ── */
+.client-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.client-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; transition:box-shadow 0.15s; }
+.client-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.07); }
+.client-card.flag-red { border-color:var(--red-border); background:var(--red-dim); }
+.client-card.flag-yellow { border-color:var(--yellow-border); background:var(--yellow-dim); }
+.client-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; }
+.client-name { font-size:13px; font-weight:700; color:var(--text); }
+.client-type { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; padding:2px 7px; border-radius:4px; font-weight:600; }
+.client-type.dfy { background:var(--blue-dim); color:var(--blue); border:1px solid var(--blue-border); }
+.client-type.acc { background:var(--green-dim); color:var(--green); border:1px solid var(--green-border); }
+.client-po { color:var(--text3); font-size:10px; margin-bottom:8px; font-weight:500; }
+.client-goal { color:var(--text2); font-size:11px; margin-bottom:6px; }
+.client-progress-wrap { margin-top:6px; }
+.client-progress-header { display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; }
+.client-actual { color:var(--text); font-weight:600; }
+.notes-box { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 10px; font-size:10px; color:var(--text3); line-height:1.6; margin-top:6px; }
+
+/* ── FILTERS ── */
+.filter-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+.month-btn { padding:5px 12px; border-radius:6px; background:var(--surface); border:1px solid var(--border); color:var(--text2); cursor:pointer; font-size:11px; font-weight:500; transition:all 0.15s; }
+.month-btn:hover { border-color:var(--border2); background:var(--surface2); }
+.month-btn.active { background:var(--blue-dim); border-color:var(--blue-border); color:var(--blue); font-weight:600; }
+.search-input-light { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:7px; font-size:12px; width:200px; transition:border-color 0.15s; font-family:'Inter',sans-serif; }
+.search-input-light:focus { outline:none; border-color:var(--accent); }
+.search-input-light::placeholder { color:var(--text3); }
+
+/* ── TABLE ── */
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { background:var(--surface2); color:var(--text3); font-size:10px; text-transform:uppercase; letter-spacing:0.8px; padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; }
+.data-table td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:11px; color:var(--text2); vertical-align:top; }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:var(--surface2); }
+.td-main { color:var(--text); font-weight:600; font-size:12px; }
+.td-po { color:var(--accent); font-size:10px; font-weight:600; }
+
+/* ── POD CARDS ── */
+.po-table-wrap { display:flex; flex-direction:column; gap:8px; }
+.pod-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 22px; transition:box-shadow 0.15s; }
+.pod-card:hover { box-shadow:0 2px 10px rgba(0,0,0,0.07); }
+.pod-card.pod-warning { border-color:var(--red-border); }
+.pod-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.pod-name { font-size:15px; font-weight:800; color:var(--text); }
+.pod-sub { color:var(--text3); font-size:11px; margin-top:2px; }
+.pod-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:14px; }
+.pod-metric-box { background:var(--surface2); border-radius:8px; padding:12px 14px; text-align:center; }
+.pod-metric-val { font-size:20px; font-weight:800; line-height:1; margin-bottom:2px; }
+.pod-metric-label { color:var(--text3); font-size:9px; text-transform:uppercase; letter-spacing:0.8px; font-weight:600; }
+.pod-progress-row { margin-top:12px; }
+.pod-progress-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text2); margin-bottom:4px; font-weight:500; }
+.pod-clients-row { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+.pod-client-chip { padding:3px 9px; border-radius:20px; font-size:10px; font-weight:500; border:1px solid; }
+.pod-client-chip.green { background:var(--green-dim); color:var(--green); border-color:var(--green-border); }
+.pod-client-chip.red { background:var(--red-dim); color:var(--red); border-color:var(--red-border); }
+.pod-client-chip.yellow { background:var(--yellow-dim); color:var(--yellow); border-color:var(--yellow-border); }
+.pod-client-chip.grey { background:var(--surface2); color:var(--text3); border-color:var(--border); }
+
+/* ── FLAG CARDS ── */
+.flag-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.flag-card { background:var(--red-dim); border:1px solid var(--red-border); border-radius:10px; padding:16px 18px; }
+.flag-card.yellow-flag { background:var(--yellow-dim); border-color:var(--yellow-border); }
+.flag-card-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.flag-card-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--red); }
+.flag-card.yellow-flag .flag-card-title { color:var(--yellow); }
+.flag-count { font-size:28px; font-weight:800; color:var(--red); line-height:1; }
+.flag-card.yellow-flag .flag-count { color:var(--yellow); }
+
+/* ── LOADING ── */
+.loading { display:flex; align-items:center; justify-content:center; height:200px; color:var(--text3); font-size:12px; gap:8px; }
+.spinner { width:16px; height:16px; border:2px solid var(--border2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.empty { color:var(--text3); font-size:11px; font-style:italic; padding:20px; }
+.card-full { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:12px; }
+
+/* ═══════════════════════════════════════════════════════
+   DARK THEME — OPERATIONAL GOALS TAB
+═══════════════════════════════════════════════════════ */
+.dark-section {
+  --dbg: #1a1714;
+  --dbg2: #221f1b;
+  --dsurface: #28241f;
+  --dsurface2: #332e28;
+  --dborder: #3d3830;
+  --dtext: #f0ebe3;
+  --dtext2: #b8b0a6;
+  --dmuted: #6e6860;
+  --daccent: #7c5ef9;
+  --dgreen: #00b37e;
+  --dgreen-soft: rgba(0,179,126,0.1);
+  --dyellow: #f59e0b;
+  --dorange: #f97316;
+  --dred: #ef4444;
+  background:var(--dbg);
+  color:var(--dtext);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  border-radius:12px;
+  padding:28px;
+  margin-top:0;
+}
+
+.dark-section .section-title {
+  color:var(--dtext2);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.dark-section .section-title::after { background:var(--dborder); }
+
+/* Dark tab switcher (Accelerate/DFY) */
+.dark-tabs {
+  display:flex;
+  background:var(--dsurface);
+  border:1px solid var(--dborder);
+  border-radius:10px;
+  padding:3px;
+  gap:3px;
+  width:fit-content;
+  margin-bottom:20px;
+}
+.dark-tab {
+  padding:6px 18px;
+  border-radius:7px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--dmuted);
+  border:none;
+  background:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .2s;
+}
+.dark-tab.active {
+  background:linear-gradient(135deg,#7c5ef9,#9b82ff);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(124,94,249,0.35);
+}
+
+/* Dark KPI strip */
+.dark-kpi-row {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:24px;
+}
+.dark-kpi {
+  background:var(--dsurface);
+  border:1px solid var(--dborder);
+  border-radius:12px;
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+}
+.dark-kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--dk-color,var(--daccent)); }
+.dark-kpi-label { font-size:10px; font-weight:700; color:var(--dmuted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px; }
+.dark-kpi-val { font-size:28px; font-weight:900; letter-spacing:-0.04em; color:var(--dk-color,var(--dtext)); line-height:1; margin-bottom:3px; }
+.dark-kpi-sub { font-size:11px; color:var(--dmuted); font-weight:500; }
+
+/* Dark client grid */
+.dark-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:12px;
+}
+.dark-card {
+  background:var(--dsurface);
+  border:1.5px solid var(--dborder);
+  border-radius:14px;
+  overflow:hidden;
+  transition:all .2s;
+  animation:fadeUp .3s ease both;
+}
+.dark-card:hover { border-color:#4a4540; transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,0.3); }
+.dark-card-top {
+  padding:14px 16px 12px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid var(--dborder);
+}
+.dark-avatar {
+  width:36px; height:36px;
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:900; color:#fff;
+  flex-shrink:0;
+  background:linear-gradient(135deg,var(--daccent),#9b82ff);
+}
+.dark-cname { font-size:13px; font-weight:800; color:var(--dtext); letter-spacing:-0.01em; margin-bottom:2px; }
+.dark-cmeta { display:flex; align-items:center; gap:5px; }
+.dark-cpo { font-size:10px; font-weight:600; color:var(--dmuted); }
+.dark-badge { font-size:8px; font-weight:800; padding:2px 6px; border-radius:20px; letter-spacing:0.05em; text-transform:uppercase; }
+.dark-badge-acc { background:rgba(124,94,249,0.15); color:#9b82ff; border:1px solid rgba(124,94,249,0.3); }
+.dark-badge-dfy { background:rgba(0,179,126,0.12); color:#00b37e; border:1px solid rgba(0,179,126,0.25); }
+.dark-pill { padding:4px 10px; border-radius:20px; font-size:10px; font-weight:800; white-space:nowrap; margin-left:auto; }
+.dark-pill-g { background:rgba(0,179,126,0.15); color:#00b37e; }
+.dark-pill-y { background:rgba(245,158,11,0.15); color:#f59e0b; }
+.dark-pill-o { background:rgba(249,115,22,0.15); color:#f97316; }
+.dark-pill-r { background:rgba(239,68,68,0.15); color:#ef4444; }
+.dark-pill-gr { background:rgba(110,104,96,0.2); color:var(--dmuted); }
+
+/* Execution block */
+.dark-exec {
+  padding:14px 16px;
+  display:flex; align-items:center; gap:14px;
+  border-bottom:1px solid var(--dborder);
+}
+.dark-ring { position:relative; width:54px; height:54px; flex-shrink:0; }
+.dark-ring svg { transform:rotate(-90deg); }
+.dark-ring-pct {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:900;
+}
+.dark-exec-info { flex:1; }
+.dark-exec-nums { font-size:22px; font-weight:900; letter-spacing:-0.04em; line-height:1; margin-bottom:2px; }
+.dark-exec-label { font-size:10px; font-weight:600; color:var(--dmuted); text-transform:uppercase; letter-spacing:0.05em; }
+.dark-goal-col { text-align:right; }
+.dark-goal-label { font-size:9px; font-weight:700; color:var(--dmuted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; }
+.dark-goal-val { font-size:11px; font-weight:700; color:var(--dtext2); }
+
+/* Progress bar dark */
+.dark-prog { padding:0 16px 12px; }
+.dark-prog-bg { height:5px; background:var(--dbg2); border-radius:3px; overflow:hidden; }
+.dark-prog-fill { height:100%; border-radius:3px; transition:width .8s ease; }
+.dark-prog-meta { display:flex; justify-content:space-between; margin-top:5px; font-size:10px; font-weight:600; color:var(--dmuted); }
+
+/* Card footer dark */
+.dark-footer {
+  padding:10px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:10px;
+}
+.dark-footer-left { color:var(--dmuted); font-weight:600; }
+
+/* Dark search */
+.dark-filter-row { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.dark-search-wrap { position:relative; }
+.dark-search {
+  padding:8px 12px 8px 34px;
+  background:var(--dsurface);
+  border:1px solid var(--dborder);
+  border-radius:9px;
+  color:var(--dtext);
+  font-size:12px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:500;
+  outline:none;
+  width:220px;
+  transition:border-color .2s;
+}
+.dark-search:focus { border-color:var(--daccent); }
+.dark-search::placeholder { color:var(--dmuted); }
+.dark-search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--dmuted); pointer-events:none; }
+.dark-fbtn {
+  padding:7px 13px;
+  background:var(--dsurface);
+  border:1.5px solid var(--dborder);
+  border-radius:9px;
+  color:var(--dtext2);
+  font-size:11px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+.dark-fbtn:hover,.dark-fbtn.on { background:rgba(124,94,249,0.1); border-color:var(--daccent); color:#9b82ff; }
+.dark-fbtn.don { background:rgba(0,179,126,0.1); border-color:var(--dgreen); color:var(--dgreen); }
+.dark-fbtn.yon { background:rgba(245,158,11,0.1); border-color:var(--dyellow); color:var(--dyellow); }
+.dark-fbtn.oon { background:rgba(249,115,22,0.1); border-color:var(--dorange); color:var(--dorange); }
+.dark-fbtn.ron { background:rgba(239,68,68,0.1); border-color:var(--dred); color:var(--dred); }
+
+/* Skeleton shimmer */
+.shim { background:linear-gradient(90deg,var(--dborder) 25%,var(--dsurface2) 50%,var(--dborder) 75%); background-size:400% 100%; animation:shimmer 1.4s ease infinite; border-radius:6px; height:12px; }
+@keyframes shimmer { 0%{background-position:100%} 100%{background-position:-100%} }
+
+/* ── OPERATIONAL GOALS — OP GRID ── */
+.op-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px;
+}
+.op-card {
+  background:var(--dsurface);
+  border:1.5px solid var(--dborder);
+  border-radius:12px;
+  padding:16px;
+  transition:all .2s;
+}
+.op-card:hover { border-color:#4a4540; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+.op-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.op-card-name { font-size:13px; font-weight:800; color:var(--dtext); }
+.op-card-po { font-size:10px; color:var(--dmuted); font-weight:600; margin-top:2px; }
+.op-progress-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.op-nums { font-size:22px; font-weight:900; letter-spacing:-0.03em; }
+.op-target { font-size:12px; color:var(--dmuted); font-weight:600; }
+.op-bar-bg { height:6px; background:var(--dbg2); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+.op-bar-fill { height:100%; border-radius:3px; transition:width .8s ease; }
+.op-footer { display:flex; align-items:center; justify-content:space-between; font-size:10px; color:var(--dmuted); font-weight:600; }
+
+/* ═══════════════════════════════════════════════════════
+   POD PERFORMANCE TAB — combined
+═══════════════════════════════════════════════════════ */
+.pod-combined-grid { display:flex; flex-direction:column; gap:16px; }
+.pod-combined-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.pod-combined-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 22px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.pod-combined-name { font-size:15px; font-weight:800; color:var(--text); }
+.pod-combined-body { display:grid; grid-template-columns:1fr 1fr; }
+.pod-col { padding:18px 22px; }
+.pod-col + .pod-col { border-left:1px solid var(--border); }
+.pod-col-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:14px; }
+.pod-col-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.pod-mini-box { background:var(--surface2); border-radius:8px; padding:10px 12px; text-align:center; }
+.pod-mini-val { font-size:18px; font-weight:800; line-height:1; margin-bottom:2px; }
+.pod-mini-label { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; font-weight:600; color:var(--text3); }
+.pod-client-chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){.kpi-grid,.kpi-grid-6{grid-template-columns:repeat(3,1fr)}.client-grid{grid-template-columns:repeat(2,1fr)}.pod-metrics{grid-template-columns:repeat(2,1fr)}.dark-kpi-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.kpi-grid,.kpi-grid-3,.kpi-grid-6{grid-template-columns:repeat(2,1fr)}.client-grid,.dark-grid{grid-template-columns:1fr}.two-col,.flag-grid{grid-template-columns:1fr}.pod-combined-body{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">editoz<span>.</span>club</div>
+  <div class="header-right">
+    <div class="last-updated"><div class="live-dot"></div><span id="lastUpdated">Loading…</span></div>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-tab active" onclick="switchTab('perf',this)">Performance Goals</div>
+  <div class="nav-tab" onclick="switchTab('ops',this)">Operational Goals</div>
+  <div class="nav-tab" onclick="switchTab('pod',this)">POD Performance</div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════
+     TAB 1: PERFORMANCE GOALS (Light — Google Sheets)
+════════════════════════════════════════════════ -->
+<div class="section active" id="tab-perf">
+  <div class="section-title">This Week's Snapshot</div>
+  <div id="perfKPIs" class="kpi-grid kpi-grid-6"></div>
+
+  <div class="section-title" style="margin-top:4px">All Clients</div>
+  <div class="filter-row">
+    <input class="search-input-light" id="perfSearch" placeholder="Search client or PO…" oninput="applyPerfFilters()">
+    <button class="month-btn active" onclick="setPerfFilter('all',this)">All</button>
+    <button class="month-btn" onclick="setPerfFilter('DFY',this)">DFY</button>
+    <button class="month-btn" onclick="setPerfFilter('Accelerate',this)">Accelerate</button>
+    <button class="month-btn" onclick="setPerfFilter('red',this)">🔴 Red</button>
+    <button class="month-btn" onclick="setPerfFilter('yellow',this)">🟡 Watch</button>
+    <button class="month-btn" onclick="setPerfFilter('green',this)">🟢 On Track</button>
+  </div>
+  <div class="client-grid" id="perfGrid"><div class="loading"><div class="spinner"></div>Loading from Google Sheets…</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 2: OPERATIONAL GOALS (Dark — Notion)
+════════════════════════════════════════════════ -->
+<div class="section" id="tab-ops">
+  <div class="dark-section" id="darkSection">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:22px;font-weight:900;color:#f0ebe3;letter-spacing:-0.03em;font-family:'Plus Jakarta Sans',sans-serif">Operational Goals</div>
+        <div style="font-size:12px;color:#6e6860;font-weight:500;margin-top:3px;font-family:'Plus Jakarta Sans',sans-serif">Content output — target vs. actual delivered this cycle</div>
+      </div>
+      <div class="dark-tabs">
+        <button class="dark-tab active" onclick="switchOpsTab('accelerate',this)">Accelerate</button>
+        <button class="dark-tab" onclick="switchOpsTab('dfy',this)">DFY</button>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="dark-kpi-row" id="opsKPIs">
+      <div class="dark-kpi"><div class="dark-kpi-label">Total Clients</div><div class="dark-kpi-val shim" style="width:60px;height:28px"></div></div>
+      <div class="dark-kpi"><div class="dark-kpi-label">On Target</div><div class="dark-kpi-val shim" style="width:50px;height:28px"></div></div>
+      <div class="dark-kpi"><div class="dark-kpi-label">At Risk</div><div class="dark-kpi-val shim" style="width:50px;height:28px"></div></div>
+      <div class="dark-kpi"><div class="dark-kpi-label">Avg Output</div><div class="dark-kpi-val shim" style="width:60px;height:28px"></div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="dark-filter-row">
+      <div class="dark-search-wrap">
+        <svg class="dark-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="dark-search" id="opsSearch" placeholder="Search clients…" oninput="applyOpsFilters()">
+      </div>
+      <button class="dark-fbtn don" id="ofg" onclick="toggleOpsFilter('green',this)">🟢 On Target</button>
+      <button class="dark-fbtn yon" id="ofy" onclick="toggleOpsFilter('yellow',this)">🟡 Partial</button>
+      <button class="dark-fbtn ron" id="ofr" onclick="toggleOpsFilter('red',this)">🔴 Behind</button>
+      <span style="font-size:11px;font-weight:700;color:#6e6860;margin-left:auto" id="opsBadge"></span>
+    </div>
+
+    <!-- Client op cards -->
+    <div class="op-grid" id="opsGrid">
+      <div style="color:#6e6860;font-size:12px;font-weight:600;grid-column:span 3;padding:20px 0">Loading Notion data…</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 3: POD PERFORMANCE (Combined)
+════════════════════════════════════════════════ -->
+<div class="section" id="tab-pod">
+  <div class="section-title">POD Summary</div>
+  <div class="kpi-grid" id="podKPIs"></div>
+
+  <div class="section-title">POD Breakdown</div>
+  <div class="pod-combined-grid" id="podGrid">
+    <div class="loading"><div class="spinner"></div>Loading…</div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SHARED CONFIG
+// ═══════════════════════════════════════════════════════
+const SHEET_ID = '1XskwEunz6K0k4ldw6BAwTmiUWKkcq2JeraqTL-_OQ0o';
+const PODS = ['POD - Eshan', 'POD - Ashen', 'POD - Vishma', 'POD - Rovindu'];
+const POD_SHORT = {'POD - Eshan':'Eshan','POD - Ashen':'Ashen','POD - Vishma':'Vishma','POD - Rovindu':'Rovindu'};
+
+// PO Colors for POD tab
+const PO_COLORS = {
+  Eshan:'#7c5ef9', Vishaka:'#ff6147', Vishma:'#22c98e', Ashen:'#f59e0b',
+  Tehan:'#ec4899', Mumtaz:'#06b6d4', Rovidu:'#8b5cf6', Joshua:'#f97316',
+  Yasasi:'#10b981', Nithila:'#3b82f6', Mahima:'#e11d48', Shafrah:'#84cc16',
+  Sayuni:'#a855f7', Kasun:'#14b8a6', Pending:'#6e6860'
+};
+
+// ── Notion client registry ─────────────────────────────
+const NOTION_CLIENTS = {
+  accelerate: [
+    {name:'Haran',         po:'Eshan',   target:16, dbId:'342b6494fc1481008929d0f5d2e85522', stratDate:'2026-04-15', opTarget:16},
+    {name:'Kaushi',        po:'Eshan',   target:20, dbId:'30ab6494fc148176a4aefe807a15316a', stratDate:'2026-01-30', opTarget:20},
+    {name:'Moshi Rahman',  po:'Eshan',   target:16, dbId:'31ab6494fc14806da731e1a0563975fc', stratDate:'2026-03-09', opTarget:16},
+    {name:'Rasanga',       po:'Eshan',   target:20, dbId:'356b6494fc148009979becf0b85dff64', stratDate:'2026-05-09', opTarget:20},
+    {name:'Global United', po:'Nithila', target:20, dbId:'358b6494fc148142b64ddf68febf66a5', stratDate:'2026-05-14', opTarget:20},
+    {name:'Akkshata',      po:'Vishaka', target:20, dbId:'330b6494fc1481fe9067e7609fc7d146', stratDate:'2026-03-27', opTarget:20},
+    {name:'Jordan March',  po:'Vishaka', target:10, dbId:'306b6494fc148003b84cdecfd6f83f44', stratDate:'2026-01-27', opTarget:10},
+    {name:'Canada Mart',   po:'Vishaka', target:20, dbId:'eb7b6494fc14820dbe96811b7532509f', stratDate:'2026-05-27', opTarget:20},
+    {name:'Monika',        po:'Vishma',  target:20, dbId:'994b6494fc14836694f681ba91c6eaaf', stratDate:'2026-05-11', opTarget:20},
+    {name:'Anissa',        po:'Tehan',   target:28, dbId:'322b6494fc148031a30bfe298b75cc37', stratDate:'2026-03-13', opTarget:28},
+    {name:'Veena',         po:'Tehan',   target:8,  dbId:'34cb6494fc1481e3b5a2eb3f16272bcf', stratDate:'2026-04-20', opTarget:8},
+    {name:'Mukarram',      po:'Tehan',   target:20, dbId:'309b6494fc1480bf86bfd754ea31a5c7', stratDate:'2026-05-13', opTarget:20},
+    {name:'Vivek',         po:'Ashen',   target:20, dbId:'33bb6494fc14816f938adf04b78527bf', stratDate:'2026-04-08', opTarget:20},
+    {name:'Sam (Tetra)',   po:'Ashen',   target:0,  dbId:'34ab6494fc1480eb8f28ff8fa436c9bb', stratDate:'2026-05-18', opTarget:0, note:'TBD'},
+    {name:'Dr Tharindu',   po:'Ashen',   target:20, dbId:'344b6494fc1480cb80aee8599f7c5e6b', stratDate:'2026-04-17', opTarget:20},
+    {name:'CloverOne',     po:'Ashen',   target:16, dbId:'306b6494fc148159b23bd0dd6cbea788', stratDate:'2026-05-01', opTarget:16},
+    {name:'Ross Pirillo',  po:'Ashen',   target:16, dbId:'355b6494fc14807c9af9ed175ae3b6a4', stratDate:'2026-05-07', opTarget:16},
+    {name:'Sanjeewa',      po:'Mumtaz',  target:20, dbId:'343b6494fc14819690adc9a65045d44e', stratDate:'2026-04-16', opTarget:20},
+    {name:'Valeria',       po:'Mumtaz',  target:0,  dbId:'367b6494fc148084bba3d2858b4154d0', stratDate:'2026-06-04', opTarget:0, note:'Just started'},
+    {name:'Vajira',        po:'Yasasi',  target:20, dbId:'34ab6494fc14808c9ceccfe5b96eaf15', stratDate:'2026-04-16', opTarget:20},
+    {name:'Erika',         po:'Mahima',  target:20, dbId:'32cb6494fc14801b8997c0c3b717a417', stratDate:'2026-03-24', opTarget:20},
+    {name:'Aruna',         po:'Shafrah', target:20, dbId:'351b6494fc1480ff926ecda9328426e2', stratDate:'2026-05-07', opTarget:20},
+    {name:'Dinesh',        po:'Eshan',   target:20, dbId:'2a3b6494fc148006acf6d87cf63e4a3a', stratDate:'2026-06-01', opTarget:20},
+    {name:'Aaron',         po:'Pending', target:0,  dbId:'367b6494fc1480fcbf10f8d43d8ebd9f', stratDate:'2026-06-02', opTarget:0, note:'Just onboarded'},
+  ],
+  dfy: [
+    {name:'Robert Herjavec', po:'Joshua',  target:30, dbId:'c07357ce9aa44a4d996a5a84350947b3', pubProp:'Publishing date', opTarget:30},
+    {name:'Daniel Lubetzky', po:'Rovidu',  target:30, dbId:'1a5b6494fc1480d1b3fed6ed6e9630f7', pubProp:'Publishing date', opTarget:30},
+    {name:'Kirstin Lee',     po:'Vishma',  target:20, dbId:'2a5b6494fc14808d854be6963f666442', pubProp:'Publishing date', opTarget:20},
+    {name:'Arjun Paliwal',   po:'Rovidu',  target:60, dbId:'24eb6494fc1480029ae2eaa9db7db803', pubProp:'Publishing date', opTarget:60},
+    {name:'STYT (Ali)',      po:'Vishma',  target:10, dbId:'14fb6494fc148098a699ffc27985a41a', pubProp:'Publishing date', opTarget:10},
+    {name:'Lori Greiner',    po:'Sayuni',  target:30, dbId:'121b6494fc14801ca303e06145aa2f69', pubProp:'Publishing date', opTarget:30},
+    {name:'Chali',           po:'Joshua',  target:4,  dbId:'7a76828bc00d4f5f81515c6636472b27', pubProp:'Publishing date', opTarget:4},
+    {name:'Davie Fogarty',   po:'Kasun',   target:6,  dbId:null, opTarget:6, manual:true},
+  ]
+};
+
+const D_ACC=['Need posting','PUBLISHED','Need Posting','Published'];
+const D_DFY=['To be published','Published','Need posting','PUBLISHED','Need Posting','Done','DL Approved','To be published by Ali','Published by Ali','Calendar','Calender'];
+const SK_ACC=['Topics','Need filming','Need posting','PUBLISHED','On Hold','Do Not Progress'];
+const SK_DFY=['Ideas','Ready to film','To be published','Published','Do not progress','Calendar','On Hold'];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let allPerfClients = [];
+let perfFilter = 'all';
+let targetsMap = {};
+let opTargetsMap = {};  // client name (lowercase) → numeric op target from sheet
+let NOTION_DATA = {};   // notion fetch results keyed by client name
+let OPS_TAB = 'accelerate';
+let opsColorFilter = null;
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE SHEETS HELPERS
+// ═══════════════════════════════════════════════════════
+function parseCSV(text) {
+  const rows=[]; let row=[],cur='',inQ=false,i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){if(c==='"'&&text[i+1]==='"'){cur+='"';i+=2;continue;}if(c==='"'){inQ=false;i++;continue;}cur+=c;}
+    else{if(c==='"'){inQ=true;i++;continue;}if(c===','){row.push(cur.trim());cur='';i++;continue;}if(c==='\n'){row.push(cur.trim());rows.push(row);row=[];cur='';i++;continue;}if(c==='\r'){i++;continue;}cur+=c;}
+    i++;
+  }
+  if(cur||row.length){row.push(cur.trim());rows.push(row);}
+  return rows;
+}
+
+async function fetchSheetTab(tabName) {
+  const url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(tabName);
+  const res=await fetch(url);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const text=await res.text();
+  if(text.trim().startsWith('<')) throw new Error('Sheet not public — share as "Anyone with link can view"');
+  return parseCSV(text);
+}
+
+function parseNum(v){if(!v&&v!==0)return NaN;const s=String(v).replace(/[$,%\s]/g,'').replace(/,/g,'').trim();return parseFloat(s);}
+
+function parseTargetsTab(rows){
+  const map={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; if(!r||r.length<4)continue;
+    const name=(r[0]||'').trim(); if(!name)continue;
+    map[name.toLowerCase()]={metric:(r[3]||'').trim(),goalVal:(r[4]||'').trim(),currentProgress:(r[5]||'').trim(),goalNum:parseNum(r[4]),currentNum:parseNum(r[5])};
+  }
+  return map;
+}
+
+// ── Parse "Project operational goal" tab → { clientName_lower: number } ──
+// Columns: Project(0), Client(1), PO(2), Content output(3)
+function parseOpTargets(rows){
+  const map={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; if(!r||r.length<4)continue;
+    const name=(r[1]||'').trim(); if(!name)continue;
+    const raw=(r[3]||'').trim();
+    const num=parseFloat(raw);
+    map[name.toLowerCase()]=isNaN(num)?0:num;
+  }
+  return map;
+}
+
+function detectColumns(headerRow){
+  const h=headerRow.map(v=>(v||'').toLowerCase().trim());
+  const find=(...keys)=>{for(const k of keys){const idx=h.findIndex(v=>v.includes(k));if(idx!==-1)return idx;}return -1;};
+  return{project:find('project','type'),name:1,pod:find('pod'),po:find('product owner','po','owner'),metric:find('monthly goal metric','metric','goal type','kpi'),goalVal:find('value','target'),actual:find('actual status','actual','current','achieved','progress'),status:find('status 🔴','status'),keyIssues:find('key issue','issue','problem','challenge'),actionPlan:find('weekly action','action','plan','next step')};
+}
+
+function parseClients(rows){
+  if(!rows||rows.length<2)return[];
+  let hi=0;
+  for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].some(v=>v&&v.trim())){hi=i;break;}}
+  const cols=detectColumns(rows[hi]);
+  const get=(r,di,fi)=>{const idx=di!==-1?di:fi;return(r[idx]||'').trim();};
+  const clients=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]; if(!r||r.length<2)continue;
+    const project=get(r,cols.project,0);
+    const name=(r[1]||'').trim();
+    const pod=get(r,cols.pod,2);
+    const po=get(r,cols.po,3);
+    const metric=get(r,cols.metric,4);
+    const goalVal=get(r,cols.goalVal,5);
+    const actual=get(r,cols.actual!=-1?cols.actual:6,6);
+    const status=get(r,cols.status,7);
+    const keyIssues=get(r,cols.keyIssues,8);
+    const actionPlan=get(r,cols.actionPlan,9);
+    if(!name||name==='Client'||name==='')continue;
+    if(project==='Project'||project==='Type')continue;
+    let pct=null; let aNum=parseNum(actual); let gNum=parseNum(goalVal);
+    const tk=name.toLowerCase();
+    if((isNaN(aNum)||isNaN(gNum)||gNum===0)&&targetsMap[tk]){const t=targetsMap[tk];if(!isNaN(t.currentNum)&&!isNaN(t.goalNum)&&t.goalNum>0){aNum=t.currentNum;gNum=t.goalNum;}}
+    if(!isNaN(aNum)&&!isNaN(gNum)&&gNum>0) pct=Math.min((aNum/gNum)*100,100);
+    const targ=targetsMap[tk];
+    clients.push({project:project||'DFY',name,pod,po,metric:metric||(targ?targ.metric:''),goalVal:goalVal||(targ?targ.goalVal:''),actual:actual||(targ?targ.currentProgress:''),status,keyIssues,actionPlan,pct});
+  }
+  return clients;
+}
+
+function progressColor(p){if(p>=80)return'var(--green)';if(p>=40)return'var(--yellow)';return'var(--red)';}
+function getStatus(s){
+  if(!s)return'none';
+  const sl=s.toLowerCase();
+  if(s.includes('🔴')||sl.includes('red')||sl.includes('off track')||sl.includes('behind'))return'red';
+  if(s.includes('🟡')||sl.includes('yellow')||sl.includes('amber')||sl.includes('watch')||sl.includes('at risk'))return'yellow';
+  if(s.includes('🟢')||sl.includes('green')||sl.includes('on track')||sl.includes('ahead'))return'green';
+  return'none';
+}
+function computeGoalProgress(clients){
+  const wn=clients.filter(c=>c.pct!==null),ws=clients.filter(c=>c.pct===null);
+  const numHit=wn.filter(c=>c.pct>=100).length,numOT=wn.filter(c=>c.pct>=60&&c.pct<100).length;
+  const sg=ws.filter(c=>getStatus(c.status)==='green').length,sy=ws.filter(c=>getStatus(c.status)==='yellow').length;
+  const total=clients.length,hot=numHit+numOT+sg+Math.round(sy*.5);
+  return{pct:total>0?Math.round((hot/total)*100):0,numHit,numOnTrack:numOT,statusGreen:sg,total,hitOrOnTrack:hot};
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTION HELPERS
+// ═══════════════════════════════════════════════════════
+async function nQuery(dbId, cur){
+  const b={page_size:100}; if(cur) b.start_cursor=cur;
+  const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dbId,cursor:cur||undefined})});
+  if(!r.ok){const e=await r.json();throw new Error(e.error||r.status);}
+  return r.json();
+}
+async function allPages(dbId){
+  let pages=[],cur=null;
+  do{const res=await nQuery(dbId,cur);pages.push(...(res.results||[]));cur=res.has_more?res.next_cursor:null;}while(cur);
+  return pages;
+}
+function cycleStart(client, isDFY){
+  if(isDFY){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1).toISOString().split('T')[0];}
+  const s=new Date(client.stratDate),now=new Date();let cs=new Date(s);
+  while(true){const ce=new Date(cs);ce.setDate(ce.getDate()+30);if(now<=ce)return cs.toISOString().split('T')[0];cs=ce;}
+}
+function daysAgo(iso){if(!iso)return 999;return Math.floor((Date.now()-new Date(iso))/86400000);}
+
+async function fetchNotionClient(client, isDFY){
+  if(client.manual||!client.dbId) return{delivered:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,manual:true};
+  const DS=isDFY?D_DFY:D_ACC, SK=isDFY?SK_DFY:SK_ACC;
+  const cs=cycleStart(client,isDFY);
+  const pubProp=client.pubProp||'Publish Date';
+  const pages=await allPages(client.dbId);
+  const breakdown={};const stagnant=[];let delivered=0,pipeline=0,overdue=0;
+  const now=new Date();
+  for(const p of pages){
+    const props=p.properties||{};
+    const sObj=props['Status'];
+    const status=sObj?.status?.name||sObj?.select?.name||null;
+    const pubObj=props[pubProp];
+    const pubDate=pubObj?.date?.start||null;
+    const lastEdited=p.last_edited_time;
+    const title=props['Name']?.title?.[0]?.plain_text||'Untitled';
+    if(status) breakdown[status]=(breakdown[status]||0)+1;
+    if(DS.includes(status)){if(!pubDate||pubDate>=cs) delivered++;}
+    if(!DS.includes(status)&&status&&!['On Hold','Do Not Progress','Do not progress','Topics','Ideas'].includes(status)) pipeline++;
+    if(pubDate&&new Date(pubDate)<now&&!DS.includes(status)&&status) overdue++;
+    if(status&&!SK.includes(status)&&daysAgo(lastEdited)>=5) stagnant.push({name:title,status,days:daysAgo(lastEdited)});
+  }
+  stagnant.sort((a,b)=>b.days-a.days);
+  return{delivered,stagnant,breakdown,pipeline,overdue};
+}
+
+// ═══════════════════════════════════════════════════════
+// PERFORMANCE GOALS TAB
+// ═══════════════════════════════════════════════════════
+function kpiCard(cls,label,val,sub){
+  return'<div class="kpi-card '+cls+'"><div class="kpi-label">'+label+'</div><div class="kpi-value large">'+val+'</div><div class="kpi-sub">'+sub+'</div></div>';
+}
+function renderPerfKPIs(){
+  const total=allPerfClients.length;
+  const green=allPerfClients.filter(c=>getStatus(c.status)==='green').length;
+  const red=allPerfClients.filter(c=>getStatus(c.status)==='red').length;
+  const yellow=allPerfClients.filter(c=>getStatus(c.status)==='yellow').length;
+  const dfy=allPerfClients.filter(c=>c.project==='DFY').length;
+  const acc=allPerfClients.filter(c=>c.project==='Accelerate').length;
+  const gp=computeGoalProgress(allPerfClients);
+  document.getElementById('perfKPIs').innerHTML=
+    '<div class="goal-pct-card"><div class="kpi-label">Goal Progress</div><div class="goal-pct-big">'+gp.pct+'%</div><div style="font-size:11px;color:var(--text2)">'+gp.hitOrOnTrack+' of '+gp.total+' clients on track or ahead</div><div class="goal-pct-bar"><div class="progress-track" style="height:8px"><div class="progress-fill" style="width:'+gp.pct+'%;background:var(--blue)"></div></div></div><div style="display:flex;gap:10px;margin-top:6px;font-size:10px;color:var(--text3)"><span style="color:var(--green)">● '+(gp.numHit+gp.statusGreen)+' hit target</span><span style="color:var(--yellow)">● '+gp.numOnTrack+' on track</span><span style="color:var(--red)">● '+(gp.total-gp.hitOrOnTrack)+' behind</span></div></div>'+
+    kpiCard('blue','Total Clients',total,dfy+' DFY · '+acc+' Accelerate')+
+    kpiCard(green>=red?'green':'red','🟢 On Track',green,Math.round((green/total)*100)+'% of portfolio')+
+    kpiCard(red>0?'red':'green','🔴 Red Flag',red,red>0?'Need immediate attention':'No red flags ✓')+
+    kpiCard(yellow>0?'yellow':'green','🟡 Watch',yellow,'Monitoring closely')+
+    kpiCard('purple','Active PODs',PODS.length,'Eshan · Ashen · Vishma · Rovindu');
+}
+
+function setPerfFilter(f,btn){
+  document.querySelectorAll('#tab-perf .month-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); perfFilter=f; applyPerfFilters();
+}
+function applyPerfFilters(){
+  const q=(document.getElementById('perfSearch').value||'').toLowerCase();
+  let f=allPerfClients;
+  if(perfFilter==='DFY'||perfFilter==='Accelerate') f=f.filter(c=>c.project===perfFilter);
+  else if(perfFilter==='red') f=f.filter(c=>getStatus(c.status)==='red');
+  else if(perfFilter==='yellow') f=f.filter(c=>getStatus(c.status)==='yellow');
+  else if(perfFilter==='green') f=f.filter(c=>getStatus(c.status)==='green');
+  if(q) f=f.filter(c=>c.name.toLowerCase().includes(q)||(c.po||'').toLowerCase().includes(q)||(c.pod||'').toLowerCase().includes(q));
+  renderPerfGrid(f);
+}
+function renderPerfGrid(clients){
+  const grid=document.getElementById('perfGrid');
+  if(!clients.length){grid.innerHTML='<div class="empty" style="grid-column:span 3">No clients match this filter.</div>';return;}
+  grid.innerHTML=clients.map(c=>perfClientCard(c)).join('');
+}
+function perfClientCard(c){
+  const st=getStatus(c.status);
+  const tc=c.project==='DFY'?'dfy':'acc';
+  const bc=st==='red'?'flag-red':st==='yellow'?'flag-yellow':'';
+  const pb=c.pct!==null?'<div class="client-progress-wrap"><div class="client-progress-header"><span class="client-actual">'+c.actual+'</span><span style="color:'+progressColor(c.pct)+';font-weight:700">'+c.pct.toFixed(0)+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+c.pct.toFixed(1)+'%;background:'+progressColor(c.pct)+'"></div></div></div>':(c.actual?'<div style="font-size:11px;color:var(--text2);margin-top:4px;font-weight:500">Current: '+c.actual+'</div>':'');
+  const pod=c.pod?'<span style="font-size:9px;background:var(--purple-dim);color:var(--purple);border:1px solid #d8b4fe;border-radius:4px;padding:1px 6px;font-weight:600">'+c.pod.replace('POD - ','')+'</span>':'';
+  return'<div class="client-card '+bc+'"><div class="client-header"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><div class="client-name">'+c.name+'</div></div><div style="display:flex;align-items:center;gap:4px">'+(c.status?'<span style="font-size:13px">'+c.status+'</span>':'')+'<span class="client-type '+tc+'">'+c.project+'</span></div></div><div class="client-po" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+pod+'<span>PO: '+(c.po||'—')+'</span></div>'+(c.metric?'<div class="client-goal"><span style="color:var(--text3);font-size:10px">Goal:</span> '+c.metric+' <b style="color:var(--text)">'+(c.goalVal||'—')+'</b></div>':'')+pb+(c.keyIssues?'<div class="notes-box">'+c.keyIssues.substring(0,150)+(c.keyIssues.length>150?'...':'')+'</div>':'')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// OPERATIONAL GOALS TAB
+// ═══════════════════════════════════════════════════════
+function switchOpsTab(tab, btn){
+  OPS_TAB=tab;
+  document.querySelectorAll('.dark-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  opsColorFilter=null;
+  ['ofg','ofy','ofr'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('on','don','yon','ron');const cls=id==='ofg'?'don':id==='ofy'?'yon':'ron';el.classList.add(cls);}});
+  renderOpsGrid();
+}
+
+function toggleOpsFilter(color, btn){
+  opsColorFilter = opsColorFilter===color ? null : color;
+  ['ofg','ofy','ofr'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.classList.remove('on');
+    const base=id==='ofg'?'don':id==='ofy'?'yon':'ron';
+    el.classList.add(base);
+  });
+  if(opsColorFilter){
+    const activeId={green:'ofg',yellow:'ofy',red:'ofr'}[opsColorFilter];
+    document.getElementById(activeId)?.classList.add('on');
+  }
+  applyOpsFilters();
+}
+
+function applyOpsFilters(){
+  const q=(document.getElementById('opsSearch').value||'').toLowerCase();
+  const clients=NOTION_CLIENTS[OPS_TAB];
+  let filtered=clients.filter(c=>{
+    if(q&&!c.name.toLowerCase().includes(q)&&!(c.po||'').toLowerCase().includes(q))return false;
+    if(opsColorFilter){const d=NOTION_DATA[c.name];const col=getOpsColor(c,d);if(col!==opsColorFilter)return false;}
+    return true;
+  });
+  renderOpsCards(filtered);
+}
+
+// Resolve op target — sheet first, fallback to hardcoded client value
+function getOpTarget(c){
+  const key=c.name.toLowerCase();
+  if(opTargetsMap[key]!==undefined) return opTargetsMap[key];
+  // fuzzy match — try first word or partial
+  for(const [k,v] of Object.entries(opTargetsMap)){
+    if(k.includes(key.split(' ')[0])||key.includes(k.split(' ')[0])) return v;
+  }
+  return c.opTarget||0;
+}
+
+function getOpsColor(c, d){
+  if(!d||d.manual)return'gray';
+  const t=getOpTarget(c);
+  if(t<=0)return'gray';
+  const pct=(d.delivered/t)*100;
+  if(pct>=90)return'green';
+  if(pct>=50)return'yellow';
+  return'red';
+}
+
+function getOpsColorHex(col){
+  return{green:'#00b37e',yellow:'#f59e0b',orange:'#f97316',red:'#ef4444',gray:'#6e6860'}[col]||'#6e6860';
+}
+
+function renderOpsKPIs(){
+  const clients=NOTION_CLIENTS[OPS_TAB];
+  const withData=clients.filter(c=>NOTION_DATA[c.name]&&!NOTION_DATA[c.name].manual&&getOpTarget(c)>0);
+  const total=withData.length;
+  const onTarget=withData.filter(c=>getOpsColor(c,NOTION_DATA[c.name])==='green').length;
+  const atRisk=withData.filter(c=>getOpsColor(c,NOTION_DATA[c.name])==='red').length;
+  const totalDel=withData.reduce((s,c)=>s+(NOTION_DATA[c.name]?.delivered||0),0);
+  const totalTgt=withData.reduce((s,c)=>s+getOpTarget(c),0);
+  const avgPct=totalTgt>0?Math.round((totalDel/totalTgt)*100):0;
+
+  document.getElementById('opsKPIs').innerHTML=
+    `<div class="dark-kpi" style="--dk-color:#7c5ef9"><div class="dark-kpi-label">Total Clients</div><div class="dark-kpi-val">${clients.length}</div><div class="dark-kpi-sub">${clients.filter(c=>getOpTarget(c)>0).length} with targets set</div></div>`+
+    `<div class="dark-kpi" style="--dk-color:#00b37e"><div class="dark-kpi-label">On Target</div><div class="dark-kpi-val">${onTarget}</div><div class="dark-kpi-sub">≥90% of output goal</div></div>`+
+    `<div class="dark-kpi" style="--dk-color:#ef4444"><div class="dark-kpi-label">Behind</div><div class="dark-kpi-val">${atRisk}</div><div class="dark-kpi-sub"><50% of output goal</div></div>`+
+    `<div class="dark-kpi" style="--dk-color:#f59e0b"><div class="dark-kpi-label">Overall Output</div><div class="dark-kpi-val">${avgPct}%</div><div class="dark-kpi-sub">${totalDel} of ${totalTgt} posts</div></div>`;
+}
+
+function renderOpsGrid(){
+  renderOpsKPIs();
+  applyOpsFilters();
+}
+
+function renderOpsCards(clients){
+  const grid=document.getElementById('opsGrid');
+  const badge=document.getElementById('opsBadge');
+  if(badge) badge.textContent=clients.length+' client'+(clients.length!==1?'s':'');
+
+  if(!clients.length){grid.innerHTML='<div style="color:#6e6860;font-size:12px;font-weight:600;grid-column:span 3;padding:20px 0">No clients match.</div>';return;}
+
+  grid.innerHTML=clients.map(c=>{
+    const d=NOTION_DATA[c.name];
+    const loading=!d;
+    const isDFY=OPS_TAB==='dfy';
+    const col=getOpsColor(c,d);
+    const colHex=getOpsColorHex(col);
+    const delivered=d?.delivered||0;
+    const target=getOpTarget(c);
+    const pct=target>0?Math.min(Math.round((delivered/target)*100),999):null;
+    const progressPct=pct!==null?Math.min(pct,100):0;
+    const initials=c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const poColor=PO_COLORS[c.po]||'#6e6860';
+
+    if(loading){
+      return`<div class="op-card"><div class="op-card-header"><div><div class="op-card-name">${c.name}</div><div class="op-card-po">PO: ${c.po||'—'}</div></div></div><div class="shim" style="width:60%;margin-bottom:8px"></div><div class="shim" style="width:100%;height:6px"></div></div>`;
+    }
+
+    if(c.manual||!c.dbId){
+      return`<div class="op-card"><div class="op-card-header"><div><div class="op-card-name">${c.name}</div><div class="op-card-po">PO: ${c.po||'—'}</div></div><span style="font-size:10px;font-weight:700;color:#6e6860;background:rgba(110,104,96,0.15);padding:3px 8px;border-radius:20px">Manual</span></div><div style="font-size:11px;color:#6e6860;margin-top:8px">Tracked manually — not on Notion</div></div>`;
+    }
+
+    if(target<=0){
+      return`<div class="op-card"><div class="op-card-header"><div><div class="op-card-name">${c.name}</div><div class="op-card-po">PO: ${c.po||'—'}</div></div><span style="font-size:10px;font-weight:700;color:#6e6860;background:rgba(110,104,96,0.15);padding:3px 8px;border-radius:20px">${c.note||'TBD'}</span></div><div style="font-size:11px;color:#6e6860;margin-top:8px">Target not yet defined</div></div>`;
+    }
+
+    return`<div class="op-card" style="border-color:${col!=='gray'?colHex+'33':''}">
+      <div class="op-card-header">
+        <div>
+          <div class="op-card-name">${c.name}</div>
+          <div class="op-card-po" style="color:${poColor}">PO: ${c.po||'—'} <span style="color:#6e6860">· ${isDFY?'DFY':'ACC'}</span></div>
+        </div>
+        <span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:${colHex}18;color:${colHex}">${pct!==null?pct+'%':'—'}</span>
+      </div>
+      <div class="op-progress-row">
+        <div class="op-nums" style="color:${colHex}">${delivered}<span style="color:#6e6860;font-size:14px;font-weight:600"> / ${target}</span></div>
+        <div class="op-target">posts this cycle</div>
+      </div>
+      <div class="op-bar-bg">
+        <div class="op-bar-fill" style="width:${progressPct}%;background:${colHex}"></div>
+      </div>
+      <div class="op-footer">
+        <span>${d.pipeline>0?'📦 '+d.pipeline+' in pipeline':'No pipeline cards'}</span>
+        <span>${d.stagnant?.length>0?'⚠ '+d.stagnant.length+' stagnant':'✓ Active'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// POD PERFORMANCE TAB
+// ═══════════════════════════════════════════════════════
+function renderPodTab(){
+  if(!allPerfClients.length) return;
+
+  const podData=PODS.map(pod=>{
+    const perfClients=allPerfClients.filter(c=>c.pod===pod);
+    const notionClients=[...NOTION_CLIENTS.accelerate,...NOTION_CLIENTS.dfy].filter(c=>{
+      const pc=allPerfClients.find(p=>p.name.toLowerCase()===c.name.toLowerCase());
+      return pc&&pc.pod===pod;
+    });
+    const gp=computeGoalProgress(perfClients);
+    const opDel=notionClients.reduce((s,c)=>s+(NOTION_DATA[c.name]?.delivered||0),0);
+    const opTgt=notionClients.reduce((s,c)=>s+getOpTarget(c),0);
+    const opPct=opTgt>0?Math.round((opDel/opTgt)*100):0;
+    const red=perfClients.filter(c=>getStatus(c.status)==='red').length;
+    const yellow=perfClients.filter(c=>getStatus(c.status)==='yellow').length;
+    const green=perfClients.filter(c=>getStatus(c.status)==='green').length;
+    return{pod,perfClients,notionClients,gp,opDel,opTgt,opPct,red,yellow,green};
+  }).filter(p=>p.perfClients.length>0);
+
+  // KPIs
+  const avgPerf=podData.length?Math.round(podData.reduce((s,p)=>s+p.gp.pct,0)/podData.length):0;
+  const avgOps=podData.length?Math.round(podData.reduce((s,p)=>s+p.opPct,0)/podData.length):0;
+  const totalRed=podData.reduce((s,p)=>s+p.red,0);
+  const bestPod=podData.sort((a,b)=>b.gp.pct-a.gp.pct)[0];
+
+  document.getElementById('podKPIs').innerHTML=
+    kpiCard('blue','Active PODs',PODS.length,'Performance tracked')+
+    kpiCard(avgPerf>=70?'green':avgPerf>=40?'yellow':'red','Avg Perf Goal',avgPerf+'%','across all PODs')+
+    kpiCard(avgOps>=70?'green':avgOps>=40?'yellow':'red','Avg Ops Output',avgOps+'%','content output across PODs')+
+    kpiCard(totalRed>0?'red':'green','Red Clients',totalRed,totalRed>0?'need attention':'All clear ✓');
+
+  document.getElementById('podGrid').innerHTML=podData.map(p=>{
+    const isWarn=p.red>=3||p.gp.pct<30;
+    const chipColor=c=>{const st=getStatus(c.status);if(st==='green')return'green';if(st==='yellow')return'yellow';if(st==='red')return'red';return'grey';};
+    const perfPct=p.gp.pct;
+    const opPct=p.opPct;
+    return`<div class="pod-combined-card${isWarn?' pod-card pod-warning':''}">
+      <div class="pod-combined-header">
+        <div>
+          <div class="pod-combined-name">${POD_SHORT[p.pod]||p.pod} POD</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.pod} · ${p.perfClients.length} clients</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ${perfPct>=70?'green':perfPct>=40?'yellow':'red'}">Perf: ${perfPct}%</span>
+          <span class="badge ${opPct>=70?'green':opPct>=40?'yellow':'red'}">Ops: ${opPct}%</span>
+        </div>
+      </div>
+      <div class="pod-combined-body">
+        <div class="pod-col">
+          <div class="pod-col-title">Performance Goal</div>
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500"><span>Goal progress</span><span>${p.gp.hitOrOnTrack} of ${p.gp.total} on track</span></div>
+            <div class="progress-track" style="height:7px"><div class="progress-fill" style="width:${perfPct}%;background:${progressColor(perfPct)}"></div></div>
+          </div>
+          <div class="pod-col-metrics">
+            <div class="pod-mini-box"><div class="pod-mini-val" style="color:var(--green)">${p.green}</div><div class="pod-mini-label">🟢 On Track</div></div>
+            <div class="pod-mini-box"><div class="pod-mini-val" style="color:var(--yellow)">${p.yellow}</div><div class="pod-mini-label">🟡 Watch</div></div>
+            <div class="pod-mini-box"><div class="pod-mini-val" style="color:var(--red)">${p.red}</div><div class="pod-mini-label">🔴 Red</div></div>
+          </div>
+          <div class="pod-client-chips">
+            ${p.perfClients.sort((a,b)=>{const s={'green':0,'yellow':1,'red':2,'none':3};return(s[getStatus(a.status)]||3)-(s[getStatus(b.status)]||3);}).map(c=>'<span class="pod-client-chip '+chipColor(c)+'" title="PO: '+(c.po||'—')+' | Goal: '+(c.goalVal||'—')+' | Actual: '+(c.actual||'—')+'">'+c.name+'</span>').join('')}
+          </div>
+        </div>
+        <div class="pod-col">
+          <div class="pod-col-title">Operational Goal</div>
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500"><span>Content output</span><span>${p.opDel} of ${p.opTgt} posts</span></div>
+            <div class="progress-track" style="height:7px"><div class="progress-fill" style="width:${Math.min(opPct,100)}%;background:${progressColor(opPct)}"></div></div>
+          </div>
+          <div class="pod-col-metrics">
+            <div class="pod-mini-box"><div class="pod-mini-val">${p.opDel}</div><div class="pod-mini-label">Delivered</div></div>
+            <div class="pod-mini-box"><div class="pod-mini-val">${p.opTgt}</div><div class="pod-mini-label">Target</div></div>
+            <div class="pod-mini-box"><div class="pod-mini-val" style="color:${progressColor(opPct)}">${opPct}%</div><div class="pod-mini-label">Rate</div></div>
+          </div>
+          <div class="pod-client-chips">
+            ${p.notionClients.map(c=>{
+              const d=NOTION_DATA[c.name];
+              const col=getOpsColor(c,d);
+              const colHex=getOpsColorHex(col);
+              const delivered=d?.delivered||0;
+              const target=getOpTarget(c);
+              return'<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid '+colHex+'44;background:'+colHex+'11;color:'+colHex+'" title="Delivered: '+delivered+' / Target: '+target+'">'+c.name+'</span>';
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchTab(tab, el){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='pod') renderPodTab();
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN LOAD
+// ═══════════════════════════════════════════════════════
+async function loadSheets(){
+  try{
+    try{
+      const dr=await fetchSheetTab('Targets - DFY Clients');
+      targetsMap=parseTargetsTab(dr);
+    }catch(e){console.warn('DFY targets:',e.message);}
+    try{
+      const ar=await fetchSheetTab('Targets - Accelerate');
+      Object.assign(targetsMap,parseTargetsTab(ar));
+    }catch(e){console.warn('ACC targets:',e.message);}
+
+    // Load operational goal targets from sheet
+    try{
+      const or=await fetchSheetTab('Project operational goal');
+      opTargetsMap=parseOpTargets(or);
+    }catch(e){console.warn('Op targets:',e.message);}
+
+    let rows;
+    try{rows=await fetchSheetTab('PO Weekly Dashboard');}catch(e){
+      try{rows=await fetchSheetTab('PO Weekly  Dashboard');}catch(_){}
+      if(!rows) try{rows=await fetchSheetTab('Dashboard');}catch(_){}
+    }
+    if(!rows) throw new Error('Could not find PO Weekly Dashboard tab');
+    allPerfClients=parseClients(rows);
+    renderPerfKPIs();
+    applyPerfFilters();
+  }catch(e){
+    console.error('Sheets error:',e);
+    document.getElementById('perfGrid').innerHTML='<div class="notes-box" style="color:var(--red);border-color:var(--red-border);margin:20px">⚠ Error: '+e.message+'</div>';
+  }
+}
+
+async function loadNotion(){
+  const allClients=[...NOTION_CLIENTS.accelerate,...NOTION_CLIENTS.dfy];
+  // Show skeleton immediately
+  renderOpsCards(NOTION_CLIENTS[OPS_TAB]);
+
+  await Promise.allSettled(allClients.map(async(c)=>{
+    try{
+      const isDFY=NOTION_CLIENTS.dfy.includes(c);
+      NOTION_DATA[c.name]=await fetchNotionClient(c,isDFY);
+    }catch(e){
+      NOTION_DATA[c.name]={delivered:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,error:true};
+    }
+    // Re-render ops grid as data comes in
+    renderOpsGrid();
+  }));
+}
+
+async function refreshAll(){
+  document.getElementById('lastUpdated').textContent='Refreshing…';
+  allPerfClients=[];
+  NOTION_DATA={};
+  targetsMap={};
+  opTargetsMap={};
+  await Promise.all([loadSheets(), loadNotion()]);
+  document.getElementById('lastUpdated').textContent='Updated '+new Date().toLocaleTimeString()+' · '+new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+}
+
+// Init
+refreshAll();
+</script>
+</body>
+</html>
