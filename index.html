@@ -618,8 +618,9 @@ async function fetchNotionClient(client,isDFY){
   const{start:cs,end:ce}=getCycleWindow(client,isDFY);
   const pubProp=client.pubProp||'Publish Date';
   const pages=await allPages(client.dbId);
-  console.log(`[${client.name}] pages:${pages.length} cycle:${cs}→${ce}`);
-  if(pages.length>0)console.log(`[${client.name}] sample status:`,JSON.stringify(pages[0].properties?.Status));
+  console.log(`[${client.name}] ${pages.length} pages, cycle ${cs}→${ce}`);
+  const statusSample=pages.slice(0,3).map(p=>{const s=p.properties?.Status;return s?.status?.name||s?.select?.name||JSON.stringify(s);});
+  console.log(`[${client.name}] status samples:`,statusSample);
   const breakdown={};const stagnant=[];let delivered=0,pipeline=0,overdue=0;const now=new Date();
   for(const p of pages){
     const props=p.properties||{};
@@ -828,11 +829,26 @@ async function loadSheets(){
 async function loadNotion(){
   renderOpsCards(NOTION_CLIENTS[OPS_TAB]);
   const all=[...NOTION_CLIENTS.accelerate,...NOTION_CLIENTS.dfy];
+
+  // Debug panel
+  const debugEl=document.getElementById('opsGrid');
+  debugEl.innerHTML='<div style="color:#f0ebe3;font-family:monospace;font-size:11px;grid-column:span 3" id="debugLog">🔄 Starting Notion fetch...<br></div>';
+  const log=msg=>{const el=document.getElementById('debugLog');if(el)el.innerHTML+=msg+'<br>';};
+
   await Promise.allSettled(all.map(async c=>{
-    try{NOTION_DATA[c.name]=await fetchNotionClient(c,NOTION_CLIENTS.dfy.includes(c));}
-    catch(e){NOTION_DATA[c.name]={delivered:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,error:true};}
-    renderOpsGrid();
+    try{
+      const isDFY=NOTION_CLIENTS.dfy.includes(c);
+      const result=await fetchNotionClient(c,isDFY);
+      NOTION_DATA[c.name]=result;
+      log(`✅ ${c.name}: pages fetched, delivered=${result.delivered}, pipeline=${result.pipeline}`);
+    }catch(e){
+      NOTION_DATA[c.name]={delivered:0,stagnant:[],breakdown:{},pipeline:0,overdue:0,error:true};
+      log(`❌ ${c.name}: ERROR — ${e.message}`);
+    }
   }));
+
+  log('<b>Done. Rendering cards...</b>');
+  renderOpsGrid();
 }
 
 async function refreshAll(){
